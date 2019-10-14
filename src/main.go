@@ -1,8 +1,6 @@
 package main
 
 import (
-	//"bufio"
-	//"os"
 	"fmt"
 	"io/ioutil"
 	"math"
@@ -11,18 +9,27 @@ import (
 
 func main() {
 	//scanner := bufio.NewReader(os.Stdin) //On utilise le paquet bufio pour créer un scanner qui va lire l'entrée dans la console.
-	fmt.Print("Nombre de caractères dans le mdp : ")
+	fmt.Print("Nombre de caractères dans le mdp à cracker : ")
 	var puissance int
 	_, err := fmt.Scanf("%d", &puissance, 64)
 	//input, _ := scanner.ReadString('\n') // \n = utilisateur appuyant sur entrée, on pourrait mettre " " pour espace.
 	if err != nil {
 		print(err)
 	}
+
 	fmt.Println(puissance)
 	fmt.Println(reflect.TypeOf(puissance))
 
-	possibilites := math.Pow(26, float64(puissance))
+	possibilites := math.Pow(36, float64(puissance))
 	fmt.Println(possibilites)
+
+	caracteres := "0123456789abcdefghijklmnopqrstuvwxyz"
+
+	fmt.Println(caracteres)
+	fmt.Println(reflect.TypeOf(caracteres))
+	for i := 0; i < 36; i++ {
+		fmt.Println(string(caracteres[i]))
+	}
 
 	bytesdata, err := ioutil.ReadFile("mdp.txt")
 	fichier := string(bytesdata)
@@ -38,4 +45,5 @@ func main() {
 	} else {
 		fmt.Println("woops")
 	}
+	//fmt.Scanln()
 }

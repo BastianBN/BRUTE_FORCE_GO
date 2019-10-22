@@ -4,16 +4,18 @@ import (
 	"fmt"
 	"io/ioutil"
 	"math"
+	"runtime"
 	"sync"
 	"time"
 	"unicode/utf8"
 )
 
-var possibilitescarac = "0123456789abcdefghijklmnopqrstuvwxyz"
+var possibilitescarac = "abcdefghijklmnopqrstuvwxyz0123456789"
 var bytesdata, err = ioutil.ReadFile("mdp.txt")
 var contenufichier = string(bytesdata)
 var wg sync.WaitGroup
 var retour = make(chan string)
+var stop = 0
 
 func main() {
 	/*fmt.Print("Nombre de caractères dans le mdp à cracker : ")
@@ -40,33 +42,44 @@ func main() {
 	//fmt.Println("MDP TROUVE : " + <-retour)
 	//wg.Wait()
 
-	for i, lettre := range possibilitescarac {
+	for i := 0; i < 36; i++ {
 		wg.Add(1)
+		carac := string(possibilitescarac[i])
+		fmt.Println(carac)
 		fmt.Println("Goroutine numéro ", i)
-		go recherche(string(lettre), int(possibilites)-1)
+		go recherche(carac, puissance-1)
 	}
-	wg.Wait()
-
+	fmt.Println("MDP TROUVE : " + <-retour)
 	tempspasse := time.Since(start)
 	fmt.Println("Temps écoulé : ", tempspasse)
 }
 
 func recherche(chaine string, ncaracatrouver int) string {
-	//fmt.Println(wg)
+	//fmt.Println(chaine)
+	//fmt.Println(ncaracatrouver)
 	if trysolution(chaine) {
 		//fmt.Println("MDP TROUVE : " + chaine)
-		wg.Done()
+		fmt.Println(runtime.NumGoroutine())
+		//for i := 0; i < runtime.NumGoroutine(); i++{
+		//	fmt.Println(wg)
+		//	wg.Done()
+		//}
+		fmt.Println("STOOOOP")
+		stop = 1
 		retour <- chaine
-		return chaine
+		close(retour)
+		//return chaine
 	}
 	for i := 0; i < 36; i++ {
-		if ncaracatrouver == 0 {
-			//fmt.Println(chaine)
-			return chaine
-		} else {
-			//fmt.Println(i)
-			//fmt.Println(ncaracatrouver)
-			recherche(chaine+string(possibilitescarac[i]), ncaracatrouver-1)
+		if stop == 0 {
+			if ncaracatrouver == 0 {
+				//fmt.Println(chaine)
+				return chaine
+			} else {
+				//fmt.Println(i)
+				//fmt.Println(chaine + string(possibilitescarac[i]))
+				recherche(chaine+string(possibilitescarac[i]), ncaracatrouver-1)
+			}
 		}
 	}
 	return ""

@@ -34,17 +34,18 @@ func main() {
 	fmt.Println(possibilites)
 
 	start := time.Now()
-	wg.Add(1)
-	go recherche("", puissance)
-	fmt.Println("MDP TROUVE : " + <-retour)
-	wg.Wait()
 
-	//for i, lettre := range possibilitescarac{
-	//	wg.Add(1)
-	//	fmt.Println("Goroutine numéro ", i)
-	//	go recherche(string(lettre), int(possibilites)-1)
-	//}
+	//wg.Add(1)
+	//go recherche("", puissance)
+	//fmt.Println("MDP TROUVE : " + <-retour)
 	//wg.Wait()
+
+	for i, lettre := range possibilitescarac {
+		wg.Add(1)
+		fmt.Println("Goroutine numéro ", i)
+		go recherche(string(lettre), int(possibilites)-1)
+	}
+	wg.Wait()
 
 	tempspasse := time.Since(start)
 	fmt.Println("Temps écoulé : ", tempspasse)

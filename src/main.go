@@ -13,8 +13,7 @@ var possibilitescarac = "0123456789abcdefghijklmnopqrstuvwxyz"
 var bytesdata, err = ioutil.ReadFile("mdp.txt")
 var contenufichier = string(bytesdata)
 var wg sync.WaitGroup
-
-//var chanStop = make(chan struct{})
+var retour = make(chan string)
 
 func main() {
 	/*fmt.Print("Nombre de caractères dans le mdp à cracker : ")
@@ -37,7 +36,15 @@ func main() {
 	start := time.Now()
 	wg.Add(1)
 	go recherche("", puissance)
+	fmt.Println("MDP TROUVE : " + <-retour)
 	wg.Wait()
+
+	//for i, lettre := range possibilitescarac{
+	//	wg.Add(1)
+	//	fmt.Println("Goroutine numéro ", i)
+	//	go recherche(string(lettre), int(possibilites)-1)
+	//}
+	//wg.Wait()
 
 	tempspasse := time.Since(start)
 	fmt.Println("Temps écoulé : ", tempspasse)
@@ -46,8 +53,9 @@ func main() {
 func recherche(chaine string, ncaracatrouver int) string {
 	//fmt.Println(wg)
 	if trysolution(chaine) {
-		fmt.Println("MDP TROUVE : " + chaine)
+		//fmt.Println("MDP TROUVE : " + chaine)
 		wg.Done()
+		retour <- chaine
 		return chaine
 	}
 	for i := 0; i < 36; i++ {
@@ -64,11 +72,5 @@ func recherche(chaine string, ncaracatrouver int) string {
 }
 
 func trysolution(chaine string) bool {
-	verif := false
-	if chaine == contenufichier {
-		verif = true
-		return verif
-	} else {
-		return verif
-	}
+	return chaine == contenufichier
 }

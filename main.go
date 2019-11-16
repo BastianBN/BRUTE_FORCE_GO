@@ -64,7 +64,7 @@ func recherche(chaine string, ncaracatrouver int) string {
 		//	fmt.Println(wg)
 		//	wg.Done()
 		//}
-		fmt.Println("STOOOOP")
+		fmt.Println("STOP")
 		stop = 1
 		retour <- chaine
 		close(retour)

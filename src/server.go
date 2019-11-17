@@ -36,12 +36,12 @@ func getArgs() [4]int {
 func main() {
 	var portString string
 	ports := getArgs()
-	for i := 0; i <= 3; i++ {
+	for i := 0; i < 4; i++ {
 		fmt.Printf("#DEBUG MAIN Creating TCP Server on port %d\n", ports[i])
 		portString = fmt.Sprintf(":%s", strconv.Itoa(ports[i]))
 		fmt.Printf("#DEBUG MAIN PORT STRING |%s|\n", portString)
-
 	}
+
 	ln, err := net.Listen("tcp", portString)
 	if err != nil {
 		fmt.Printf("#DEBUG MAIN Could not create listener\n")

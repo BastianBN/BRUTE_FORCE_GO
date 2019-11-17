@@ -37,6 +37,7 @@ func getArgs() [4]int {
 
 func main() {
 	ports := getArgs()
+	fmt.Println(ports)
 
 	var listeIp [9]string
 	//Définition des adresses IP auxquelles on va demander une connexion.
@@ -52,18 +53,19 @@ func main() {
 
 	for i := 0; i < 9; i++ {
 
-		for j := 0; j < 5; j++ {
+		for j := 0; j < 4; j++ {
 			fmt.Printf("#DEBUG DIALING TCP Server on port %d\n", ports[i])
-			portString := fmt.Sprintf(listeIp[i], strconv.Itoa(ports[i]))
+			portString := fmt.Sprintf("%s:%s", listeIp[i], strconv.Itoa(ports[i]))
+			fmt.Println(portString)
 			fmt.Printf("#DEBUG MAIN PORT STRING |%s|\n", portString)
 			conn, err := net.Dial("tcp", portString)
 
 			if err != nil {
 				fmt.Printf("#DEBUG MAIN could not connect\n")
+				fmt.Println(err)
 				os.Exit(1)
 
 			} else {
-
 				defer conn.Close()
 				possibilitescarac := "abcdefghijklmnopqrstuvwxyz0123456789"
 				reader := bufio.NewReader(conn)

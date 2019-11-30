@@ -5,9 +5,16 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"runtime"
 	"strconv"
 	"strings"
+	"unicode/utf8"
 )
+
+var mdp = "oui"
+var retour = make(chan string)
+var stop = 0
+var possibilitescarac = "abcdefghijklmnopqrstuvwxyz0123456789"
 
 func getArgs() [4]int {
 	var portNumbers [4]int
@@ -31,6 +38,67 @@ func getArgs() [4]int {
 	//Should never be reached
 
 	return null
+}
+
+func handleConnection(connection net.Conn, connum int) {
+	defer connection.Close()
+	connReader := bufio.NewReader(connection)
+	//    if err !=nil{
+	//        fmt.Printf("#DEBUG %d handleConnection could not create reader\n", connum)
+	//        return
+	//    }
+
+	for {
+		inputLine, err := connReader.ReadString('\n')
+		if err != nil {
+			fmt.Printf("#DEBUG %d RCV ERROR no panic, just a client\n", connum)
+			fmt.Printf("Error :|%s|\n", err.Error())
+			break
+		}
+
+		//fmt.Printf("#DEBUG RCV |%s|\n", inputLine)
+		inputLine = strings.TrimSuffix(inputLine, "\n")
+		puissance := utf8.RuneCountInString(mdp)
+		fmt.Println(puissance)
+
+		go recherche(inputLine, puissance)
+		fmt.Println("MDP TROUVE : " + <-retour)
+	}
+}
+
+func recherche(chaine string, ncaracatrouver int) string {
+	//fmt.Println(chaine)
+	//fmt.Println(ncaracatrouver)
+	if trysolution(chaine) {
+		//fmt.Println("MDP TROUVE : " + chaine)
+		fmt.Println(runtime.NumGoroutine())
+		//for i := 0; i < runtime.NumGoroutine(); i++{
+		//	fmt.Println(wg)
+		//	wg.Done()
+		//}
+		fmt.Println("STOP")
+		stop = 1
+		retour <- chaine
+		close(retour)
+		//return chaine
+	}
+	for i := 0; i < 36; i++ {
+		if stop == 0 {
+			if ncaracatrouver == 0 {
+				//fmt.Println(chaine)
+				return chaine
+			} else {
+				//fmt.Println(i)
+				//fmt.Println(chaine + string(possibilitescarac[i]))
+				recherche(chaine+string(possibilitescarac[i]), ncaracatrouver-1)
+			}
+		}
+	}
+	return ""
+}
+
+func trysolution(chaine string) bool {
+	return chaine == mdp
 }
 
 func main() {
@@ -65,30 +133,5 @@ func main() {
 
 		go handleConnection(conn, connum)
 		connum += 1
-
 	}
-}
-
-func handleConnection(connection net.Conn, connum int) {
-
-	defer connection.Close()
-	connReader := bufio.NewReader(connection)
-	//    if err !=nil{
-	//        fmt.Printf("#DEBUG %d handleConnection could not create reader\n", connum)
-	//        return
-	//    }
-
-	for {
-		inputLine, err := connReader.ReadString('\n')
-		if err != nil {
-			fmt.Printf("#DEBUG %d RCV ERROR no panic, just a client\n", connum)
-			fmt.Printf("Error :|%s|\n", err.Error())
-			break
-		}
-
-		//fmt.Printf("#DEBUG RCV |%s|\n", inputLine)
-		inputLine = strings.TrimSuffix(inputLine, "\n")
-		fmt.Printf("#DEBUG %d RCV |%s|\n", connum, inputLine)
-	}
-
 }

@@ -38,6 +38,7 @@ func getArgs() [4]int {
 func main() {
 	ports := getArgs()
 	fmt.Println(ports)
+	possibilitescarac := "abcdefghijklmnopqrstuvwxyz0123456789"
 
 	var listeIp [9]string
 	//Définition des adresses IP auxquelles on va demander une connexion.
@@ -50,28 +51,32 @@ func main() {
 	//listeIp[6] =
 	//listeIp[7] =
 	//listeIp[8] =
+	var portString [36]string
 
-	for i := 0; i < 9; i++ {
+	for i := 0; i < 4; i++ {
+		for j := 0; j < 9; j++ {
+			portString[i] = fmt.Sprintf("%s:%s", listeIp[0], strconv.Itoa(ports[i])) //Modifier le 0 en i pour toutes les IP
+		}
+	}
+	fmt.Println(portString)
+	for i := 0; i < 4; i++ {
+		fmt.Printf("#DEBUG DIALING TCP Server on port %d\n", ports[i])
+		fmt.Println(portString)
+		fmt.Printf("#DEBUG MAIN PORT STRING |%s|\n", portString)
 
-		for j := 0; j < 4; j++ {
-			fmt.Printf("#DEBUG DIALING TCP Server on port %d\n", ports[i])
-			portString := fmt.Sprintf("%s:%s", listeIp[i], strconv.Itoa(ports[i]))
-			fmt.Println(portString)
-			fmt.Printf("#DEBUG MAIN PORT STRING |%s|\n", portString)
-			conn, err := net.Dial("tcp", portString)
-
+		for j := 0; j < 9; j++ {
+			conn, err := net.Dial("tcp", portString[0]) //Modifier le 0 en j pour tous les portstrings
 			if err != nil {
 				fmt.Printf("#DEBUG MAIN could not connect\n")
 				fmt.Println(err)
 				os.Exit(1)
 
 			} else {
+
 				defer conn.Close()
-				possibilitescarac := "abcdefghijklmnopqrstuvwxyz0123456789"
 				reader := bufio.NewReader(conn)
 				fmt.Printf("#DEBUG MAIN connected\n")
-
-				_, _ = io.WriteString(conn, fmt.Sprintf(string(possibilitescarac[i])))
+				_, _ = io.WriteString(conn, fmt.Sprintf(string(possibilitescarac[j+9*i])))
 
 				resultString, err := reader.ReadString('\n')
 				if err != nil {

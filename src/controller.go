@@ -39,9 +39,7 @@ func main() {
 	ports := getArgs()
 	fmt.Println(ports)
 	possibilitescarac := "abcdefghijklmnopqrstuvwxyz0123456789"
-
-	var listeIp [9]string
-	//Définition des adresses IP auxquelles on va demander une connexion.
+	var listeIp [9]string //Définition des adresses IP auxquelles on va demander une connexion.
 	listeIp[0] = "127.0.0.1"
 	//listeIp[1] =
 	//listeIp[2] =
@@ -51,42 +49,39 @@ func main() {
 	//listeIp[6] =
 	//listeIp[7] =
 	//listeIp[8] =
-	var portString [36]string
 
-	for i := 0; i < 4; i++ {
-		for j := 0; j < 9; j++ {
-			portString[i] = fmt.Sprintf("%s:%s", listeIp[0], strconv.Itoa(ports[i])) //Modifier le 0 en i pour toutes les IP
+	var portString [36]string //On prépare les strings IP:PORT à l'avance.
+	for i := 0; i < 9; i++ {
+		for j := 0; j < 4; j++ {
+			portString[i*4+j] = fmt.Sprintf("%s:%s", listeIp[i], strconv.Itoa(ports[j])) //Modifier le 0 en i pour toutes les IP
 		}
 	}
 	fmt.Println(portString)
-	for i := 0; i < 4; i++ {
-		fmt.Printf("#DEBUG DIALING TCP Server on port %d\n", ports[i])
-		fmt.Println(portString)
-		fmt.Printf("#DEBUG MAIN PORT STRING |%s|\n", portString)
+	for i := 0; i < 36; i++ {
+		fmt.Printf("#DEBUG MAIN PORT STRING |%s|\n", portString[i])
+		conn, err := net.Dial("tcp", portString[i]) //Modifier le 0 en j pour tous les portstrings
 
-		for j := 0; j < 9; j++ {
-			conn, err := net.Dial("tcp", portString[0]) //Modifier le 0 en j pour tous les portstrings
+		if err != nil {
+			fmt.Printf("#DEBUG MAIN could not connect\n")
+			fmt.Println(err)
+			os.Exit(1)
+
+		} else {
+
+			defer conn.Close()
+			fmt.Printf("#DEBUG MAIN connected\n")
+
+			_, _ = io.WriteString(conn, fmt.Sprintf(string(possibilitescarac[i])))
+
+			reader := bufio.NewReader(conn)
+			resultString, err := reader.ReadString('\n')
 			if err != nil {
-				fmt.Printf("#DEBUG MAIN could not connect\n")
-				fmt.Println(err)
+				fmt.Printf("DEBUG MAIN could not read from server")
 				os.Exit(1)
-
-			} else {
-
-				defer conn.Close()
-				reader := bufio.NewReader(conn)
-				fmt.Printf("#DEBUG MAIN connected\n")
-				_, _ = io.WriteString(conn, fmt.Sprintf(string(possibilitescarac[j+9*i])))
-
-				resultString, err := reader.ReadString('\n')
-				if err != nil {
-					fmt.Printf("DEBUG MAIN could not read from server")
-					os.Exit(1)
-				}
-				resultString = strings.TrimSuffix(resultString, "\n")
-				fmt.Printf("#DEBUG server replied : |%s|\n", resultString)
-				time.Sleep(1000 * time.Millisecond)
 			}
+			resultString = strings.TrimSuffix(resultString, "\n")
+			fmt.Printf("#DEBUG server replied : |%s|\n", resultString)
+			time.Sleep(1000 * time.Millisecond)
 		}
 	}
 }

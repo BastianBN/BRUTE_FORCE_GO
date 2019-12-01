@@ -3,11 +3,13 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"net"
 	"os"
 	"runtime"
 	"strconv"
 	"strings"
+	"sync"
 	"unicode/utf8"
 )
 
@@ -15,6 +17,7 @@ var mdp = "oui"
 var retour = make(chan string)
 var stop = 0
 var possibilitescarac = "abcdefghijklmnopqrstuvwxyz0123456789"
+var wg sync.WaitGroup
 
 func getArgs() [4]int {
 	var portNumbers [4]int
@@ -42,7 +45,9 @@ func getArgs() [4]int {
 
 func handleConnection(connection net.Conn, connum int) {
 	defer connection.Close()
+	fmt.Println("oui salut on est dans le handle")
 	connReader := bufio.NewReader(connection)
+
 	//    if err !=nil{
 	//        fmt.Printf("#DEBUG %d handleConnection could not create reader\n", connum)
 	//        return
@@ -50,24 +55,32 @@ func handleConnection(connection net.Conn, connum int) {
 
 	for {
 		inputLine, err := connReader.ReadString('\n')
+		fmt.Println(inputLine)
 		if err != nil {
 			fmt.Printf("#DEBUG %d RCV ERROR no panic, just a client\n", connum)
 			fmt.Printf("Error :|%s|\n", err.Error())
 			break
 		}
 
-		//fmt.Printf("#DEBUG RCV |%s|\n", inputLine)
+		fmt.Printf("#DEBUG RCV |%s|\n", inputLine)
 		inputLine = strings.TrimSuffix(inputLine, "\n")
 		puissance := utf8.RuneCountInString(mdp)
 		fmt.Println(puissance)
 
-		go recherche(inputLine, puissance)
-		fmt.Println("MDP TROUVE : " + <-retour)
+		for i := 0; i < 9; i++ {
+			wg.Add(1)
+			carac := string(inputLine[i])
+			fmt.Println(carac)
+			fmt.Println("Goroutine numéro ", i)
+			go recherche(carac, puissance-1)
+		}
+
+		_, _ = io.WriteString(connection, fmt.Sprintf("MDP TROUVE :|%s|\n", <-retour))
 	}
 }
 
 func recherche(chaine string, ncaracatrouver int) string {
-	//fmt.Println(chaine)
+	fmt.Println(chaine)
 	//fmt.Println(ncaracatrouver)
 	if trysolution(chaine) {
 		//fmt.Println("MDP TROUVE : " + chaine)
@@ -102,15 +115,20 @@ func trysolution(chaine string) bool {
 }
 
 func main() {
-	var portString string
+	var portString [36]string
 	ports := getArgs()
-	for i := 0; i < 4; i++ {
-		fmt.Printf("#DEBUG MAIN Creating TCP Server on port %d\n", ports[i])
-		portString = fmt.Sprintf(":%s", strconv.Itoa(ports[i]))
-		fmt.Printf("#DEBUG MAIN PORT STRING |%s|\n", portString)
+	for i := 0; i < 9; i++ {
+		for j := 0; j < 4; j++ {
+			portString[i*4+j] = fmt.Sprintf(":%s", strconv.Itoa(ports[j])) //Modifier le 0 en i pour toutes les IP
+		}
 	}
 
-	ln, err := net.Listen("tcp", portString)
+	for i := 0; i < 4; i++ {
+		fmt.Printf("#DEBUG MAIN Creating TCP Server on port %d\n", ports[i])
+		fmt.Printf("#DEBUG MAIN PORT STRING |%s|\n", portString[i])
+	}
+
+	ln, err := net.Listen("tcp", portString[0])
 	if err != nil {
 		fmt.Printf("#DEBUG MAIN Could not create listener\n")
 		panic(err)
@@ -131,6 +149,9 @@ func main() {
 
 		//If we're here, we did not panic and conn is a valid handler to the new connection
 
+		fmt.Println("J'handle la co")
+		fmt.Println(connum)
+		fmt.Println(conn)
 		go handleConnection(conn, connum)
 		connum += 1
 	}

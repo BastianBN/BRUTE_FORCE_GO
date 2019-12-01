@@ -71,7 +71,7 @@ func main() {
 			defer conn.Close()
 			fmt.Printf("#DEBUG MAIN connected\n")
 			fmt.Println(string(possibilitescarac[i]))
-			_, _ = io.WriteString(conn, string(possibilitescarac[i]))
+			_, _ = io.WriteString(conn, string(possibilitescarac[i])+"\n")
 
 			reader := bufio.NewReader(conn)
 

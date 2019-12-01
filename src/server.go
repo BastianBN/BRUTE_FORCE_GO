@@ -13,7 +13,7 @@ import (
 	"unicode/utf8"
 )
 
-var mdp = "aoui"
+var mdp = "allo"
 var retour = make(chan string)
 var stop = 0
 var possibilitescarac = "abcdefghijklmnopqrstuvwxyz0123456789"
@@ -64,12 +64,13 @@ func main() {
 	for i := 0; i < 4; i++ {
 		listener[i] = listenConnection(portString, i)
 	}
+
 	waitingGroupListeners.Add(4)
 	go acceptConnection(listener[0])
 	go acceptConnection(listener[1])
 	go acceptConnection(listener[2])
 	go acceptConnection(listener[3])
-	waitingGroupListeners.Wait()
+	wg.Wait()
 }
 
 func listenConnection(portString [36]string, indexDuPort int) net.Listener {
@@ -83,30 +84,28 @@ func listenConnection(portString [36]string, indexDuPort int) net.Listener {
 
 func acceptConnection(ln net.Listener) {
 	connum := 1
-	for {
-		fmt.Printf("#DEBUG MAIN Accepting next connection\n")
-		conn, errconn := ln.Accept()
+	fmt.Printf("#DEBUG MAIN Accepting next connection\n")
+	conn, errconn := ln.Accept()
 
-		if errconn != nil {
-			fmt.Printf("DEBUG MAIN Error when accepting next connection\n")
-			panic(errconn)
-		}
-
-		//If we're here, we did not panic and conn is a valid handler to the new connection
-
-		fmt.Println("J'handle la co")
-		fmt.Println(connum)
-		go handleConnection(conn, connum)
-		connum += 1
+	if errconn != nil {
+		fmt.Printf("DEBUG MAIN Error when accepting next connection\n")
+		panic(errconn)
 	}
+
+	//If we're here, we did not panic and conn is a valid handler to the new connection
+
+	fmt.Println("J'handle la co")
+	fmt.Println(connum)
+	go handleConnection(conn, connum)
+	connum += 1
+
 }
 func handleConnection(connection net.Conn, connum int) {
 	defer connection.Close()
 	fmt.Println("oui salut on est dans le handle")
 	connReader := bufio.NewReader(connection)
-
+	inputLine, err := connReader.ReadString('\n')
 	for {
-		inputLine, err := connReader.ReadString('\n')
 		fmt.Println(inputLine)
 		if err != nil {
 			fmt.Printf("#DEBUG %d RCV ERROR no panic, just a client\n", connum)
@@ -114,22 +113,21 @@ func handleConnection(connection net.Conn, connum int) {
 			break
 		}
 
-		fmt.Printf("#DEBUG RCV |%s|\n", inputLine)
 		inputLine = strings.TrimSuffix(inputLine, "\n")
 		puissance := utf8.RuneCountInString(mdp)
 		fmt.Println(puissance)
 
 		wg.Add(1)
-		carac := inputLine
-		fmt.Println(carac)
-		go recherche(carac, puissance-1)
+		fmt.Println(inputLine)
+		go recherche(inputLine, puissance-1)
 
-		_, _ = io.WriteString(connection, fmt.Sprintf("MDP TROUVE :|%s|\n", <-retour))
+		_, _ = io.WriteString(connection, fmt.Sprintf("MDP TROUVE : %s \n", <-retour))
+		break
 	}
 }
 
 func recherche(chaine string, ncaracatrouver int) string {
-	fmt.Println(chaine)
+	//fmt.Println(chaine)
 	//fmt.Println(ncaracatrouver)
 	if trysolution(chaine) {
 		//fmt.Println("MDP TROUVE : " + chaine)

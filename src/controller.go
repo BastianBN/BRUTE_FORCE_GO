@@ -70,10 +70,11 @@ func main() {
 
 			defer conn.Close()
 			fmt.Printf("#DEBUG MAIN connected\n")
-
-			_, _ = io.WriteString(conn, fmt.Sprintf(string(possibilitescarac[i])))
+			fmt.Println(string(possibilitescarac[i]))
+			_, _ = io.WriteString(conn, string(possibilitescarac[i]))
 
 			reader := bufio.NewReader(conn)
+
 			resultString, err := reader.ReadString('\n')
 			if err != nil {
 				fmt.Printf("DEBUG MAIN could not read from server")

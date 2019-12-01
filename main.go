@@ -42,6 +42,9 @@ func main() {
 	//fmt.Println("MDP TROUVE : " + <-retour)
 	//wg.Wait()
 
+	for i := 0; i < 4; i++ {
+		fmt.Println(possibilitescarac[i*9 : 9+i*9])
+	}
 	for i := 0; i < 36; i++ {
 		wg.Add(1)
 		carac := string(possibilitescarac[i])

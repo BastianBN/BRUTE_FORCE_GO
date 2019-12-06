@@ -70,7 +70,7 @@ func main() {
 	go acceptConnection(listener[1])
 	go acceptConnection(listener[2])
 	go acceptConnection(listener[3])
-	wg.Wait()
+	waitingGroupListeners.Wait()
 }
 
 func listenConnection(portString [36]string, indexDuPort int) net.Listener {
@@ -95,23 +95,19 @@ func acceptConnection(ln net.Listener) {
 	//If we're here, we did not panic and conn is a valid handler to the new connection
 
 	fmt.Println("J'handle la co")
-	fmt.Println(connum)
 	go handleConnection(conn, connum)
 	connum += 1
 
 }
 func handleConnection(connection net.Conn, connum int) {
 	defer connection.Close()
-	fmt.Println("oui salut on est dans le handle")
 	connReader := bufio.NewReader(connection)
 	inputLine, err := connReader.ReadString('\n')
-	for {
-		fmt.Println(inputLine)
-		if err != nil {
-			fmt.Printf("#DEBUG %d RCV ERROR no panic, just a client\n", connum)
-			fmt.Printf("Error :|%s|\n", err.Error())
-			break
-		}
+	fmt.Println(inputLine)
+	if err != nil {
+		fmt.Printf("#DEBUG %d RCV ERROR no panic, just a client\n", connum)
+		fmt.Printf("Error :|%s|\n", err.Error())
+	} else {
 
 		inputLine = strings.TrimSuffix(inputLine, "\n")
 		puissance := utf8.RuneCountInString(mdp)
@@ -120,9 +116,13 @@ func handleConnection(connection net.Conn, connum int) {
 		wg.Add(1)
 		fmt.Println(inputLine)
 		go recherche(inputLine, puissance-1)
+		a := <-retour
+		if len(a) == 0 {
 
-		_, _ = io.WriteString(connection, fmt.Sprintf("MDP TROUVE : %s \n", <-retour))
-		break
+		} else {
+			_, _ = io.WriteString(connection, fmt.Sprintf("MDP TROUVE : %s \n", a))
+		}
+
 	}
 }
 
@@ -154,5 +154,6 @@ func recherche(chaine string, ncaracatrouver int) string {
 			}
 		}
 	}
+	retour <- ""
 	return ""
 }

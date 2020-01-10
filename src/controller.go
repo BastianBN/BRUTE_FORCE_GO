@@ -8,6 +8,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -35,10 +36,41 @@ func getArgs() [4]int {
 	return null
 }
 
+func lancementServers(portString [36]string) [36]net.Conn {
+	var connections [36]net.Conn
+	var err error
+	possibilitescarac := "abcdefghijklmnopqrstuvwxyz0123456789"
+	for i := 0; i < 36; i++ {
+		fmt.Printf("#DEBUG MAIN PORT STRING |%s|\n", portString[i])
+		connections[i], err = net.Dial("tcp", portString[i])
+		if err != nil {
+			fmt.Printf("#DEBUG MAIN could not connect\n")
+			fmt.Println(err)
+			os.Exit(1)
+		} else {
+			fmt.Println(string(possibilitescarac[i]))
+			_, _ = io.WriteString(connections[i], string(possibilitescarac[i])+"\n")
+		}
+	}
+	return connections
+}
+
+func lecture(connection net.Conn, wg sync.WaitGroup) {
+	reader := bufio.NewReader(connection)
+
+	resultString, err := reader.ReadString('\n')
+	if err != nil {
+		fmt.Printf("DEBUG MAIN could not read from server")
+		os.Exit(1)
+	}
+	resultString = strings.TrimSuffix(resultString, "\n")
+	fmt.Printf("#DEBUG server replied : |%s|\n", resultString)
+	wg.Done()
+}
+
 func main() {
 	ports := getArgs()
 	fmt.Println(ports)
-	possibilitescarac := "abcdefghijklmnopqrstuvwxyz0123456789"
 	var listeIp [9]string //Définition des adresses IP auxquelles on va demander une connexion.
 	listeIp[0] = "127.0.0.1"
 	//listeIp[1] =
@@ -57,32 +89,14 @@ func main() {
 		}
 	}
 	fmt.Println(portString)
+	var wg sync.WaitGroup
+	wg.Add(36)
+	fmt.Printf("#DEBUG MAIN connected\n")
+	connections := lancementServers(portString)
+
 	for i := 0; i < 36; i++ {
-		fmt.Printf("#DEBUG MAIN PORT STRING |%s|\n", portString[i])
-		conn, err := net.Dial("tcp", portString[i]) //Modifier le 0 en j pour tous les portstrings
-
-		if err != nil {
-			fmt.Printf("#DEBUG MAIN could not connect\n")
-			fmt.Println(err)
-			os.Exit(1)
-
-		} else {
-
-			defer conn.Close()
-			fmt.Printf("#DEBUG MAIN connected\n")
-			fmt.Println(string(possibilitescarac[i]))
-			_, _ = io.WriteString(conn, string(possibilitescarac[i])+"\n")
-
-			reader := bufio.NewReader(conn)
-
-			resultString, err := reader.ReadString('\n')
-			if err != nil {
-				fmt.Printf("DEBUG MAIN could not read from server")
-				os.Exit(1)
-			}
-			resultString = strings.TrimSuffix(resultString, "\n")
-			fmt.Printf("#DEBUG server replied : |%s|\n", resultString)
-			time.Sleep(1000 * time.Millisecond)
-		}
+		go lecture(connections[i], wg)
 	}
+
+	time.Sleep(1000 * time.Millisecond)
 }

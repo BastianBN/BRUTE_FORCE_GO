@@ -97,6 +97,6 @@ func main() {
 	for i := 0; i < 36; i++ {
 		go lecture(connections[i], wg)
 	}
-
+	wg.Wait()
 	time.Sleep(1000 * time.Millisecond)
 }
